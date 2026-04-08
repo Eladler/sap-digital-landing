@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>סרטוני AI | SAP Digital</title>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-pink: #FF1B8D;
+            --primary-purple: #B968C7;
+            --accent-cyan: #00D9FF;
+            --white: #FFFFFF;
+            --light-gray: #F9F9FB;
+            --gradient-primary: linear-gradient(135deg, #FF1B8D 0%, #B968C7 50%, #00D9FF 100%);
+        }
+
+        html {
+            overflow-y: scroll;
+            overflow-x: hidden;
+        }
+
+        body {
+            font-family: 'Heebo', sans-serif;
+            background: var(--white);
+            color: #1a1a1a;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+        }
+
+        .grid-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 0, 0, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 0, 0, 0.02) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: 0;
+        }
+
+        .grid-bg::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% 20%, rgba(185, 104, 199, 0.03), transparent 70%);
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--white);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            transition: opacity 0.5s;
+        }
+
+        .loading.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-text {
+            font-size: 2rem;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 2rem;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid rgba(255, 27, 141, 0.2);
+            border-top-color: var(--primary-pink);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem 5%;
+            position: relative;
+            z-index: 10;
+        }
+
+        .hero-content {
+            text-align: center;
+            max-width: 900px;
+        }
+
+        .hero-logo {
+            font-size: 1.2rem;
+            font-weight: 600;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1.5rem;
+            letter-spacing: 3px;
+        }
+
+        .hero-title {
+            font-size: 5.5rem;
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 2rem;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-subtitle {
+            font-size: 1.5rem;
+            color: #666;
+            margin-bottom: 1rem;
+            font-weight: 300;
+        }
+
+        .hero-process {
+            font-size: 1.1rem;
+            color: #888;
+            margin-bottom: 3rem;
+            font-weight: 400;
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 1.3rem 3.5rem;
+            font-size: 1.2rem;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s;
+            box-shadow: 0 10px 40px rgba(255, 27, 141, 0.3);
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 50px rgba(255, 27, 141, 0.5);
+        }
+
+        .packages {
+            padding: 4rem 3%;
+            position: relative;
+            z-index: 10;
+            background: var(--light-gray);
+        }
+
+        .section-title {
+            font-size: 3.5rem;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 1rem;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 1.2rem;
+            margin-bottom: 5rem;
+        }
+
+        .package-row {
+            display: grid;
+            grid-template-columns: 1fr 380px 1fr;
+            gap: 2.5rem;
+            max-width: 1700px;
+            margin: 0 auto 6rem;
+            align-items: center;
+        }
+
+        .package-card {
+            background: white;
+            border: 2px solid rgba(255, 27, 141, 0.2);
+            border-radius: 30px;
+            padding: 3rem 2.5rem;
+            position: relative;
+            transition: all 0.4s;
+            height: 100%;
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.05);
+        }
+
+        .package-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--primary-pink);
+            box-shadow: 0 20px 60px rgba(255, 27, 141, 0.2);
+        }
+
+        .package-number {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--accent-cyan);
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .package-price {
+            font-size: 3.5rem;
+            font-weight: 900;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+        }
+
+        .package-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 1rem;
+        }
+
+        .package-desc {
+            color: #666;
+            margin-bottom: 2rem;
+            font-size: 1rem;
+            line-height: 1.7;
+        }
+
+        .package-features {
+            list-style: none;
+            margin-bottom: 2rem;
+        }
+
+        .package-features li {
+            padding: 0.9rem 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+            color: #333;
+            position: relative;
+            padding-right: 30px;
+            font-size: 0.95rem;
+        }
+
+        .package-features li::before {
+            content: '✓';
+            position: absolute;
+            right: 0;
+            color: var(--primary-pink);
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        /* Buttons Container */
+        .package-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .package-btn {
+            width: 100%;
+            padding: 1.2rem;
+            font-size: 1.1rem;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 10px 30px rgba(255, 27, 141, 0.3);
+        }
+
+        .package-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(255, 27, 141, 0.5);
+        }
+
+        .bundle-btn {
+            width: 100%;
+            padding: 1.2rem;
+            font-size: 1rem;
+            font-weight: 700;
+            background: white;
+            color: var(--primary-pink);
+            border: 2px solid var(--primary-pink);
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .bundle-btn:hover {
+            background: var(--gradient-primary);
+            color: white;
+            border-color: transparent;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(255, 27, 141, 0.3);
+        }
+
+        .bundle-price {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.8rem;
+            margin-top: 0.3rem;
+        }
+
+        .bundle-original {
+            font-size: 0.9rem;
+            color: #999;
+            text-decoration: line-through;
+        }
+
+        .bundle-discounted {
+            font-size: 1.3rem;
+            font-weight: 900;
+            color: var(--primary-pink);
+        }
+
+        .bundle-btn:hover .bundle-discounted {
+            color: white;
+        }
+
+        .character-container {
+            height: 550px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            border: 2px solid rgba(185, 104, 199, 0.2);
+            border-radius: 30px;
+            overflow: hidden;
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.05);
+            transition: all 0.4s;
+        }
+
+        .character-container:hover {
+            border-color: var(--primary-purple);
+            box-shadow: 0 20px 60px rgba(185, 104, 199, 0.3);
+        }
+
+        .character-canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        .video-carousel {
+            background: white;
+            border: 2px solid rgba(0, 217, 255, 0.2);
+            border-radius: 30px;
+            padding: 1.5rem;
+            height: 100%;
+            min-height: 450px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            transition: all 0.4s;
+            box-shadow: 0 5px 30px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .video-carousel:hover {
+            border-color: var(--accent-cyan);
+            box-shadow: 0 20px 60px rgba(0, 217, 255, 0.2);
+            transform: translateY(-10px);
+        }
+
+        .carousel-container {
+            flex: 1;
+            position: relative;
+            border-radius: 15px;
+            overflow: hidden;
+            background: #000;
+        }
+
+        .carousel-slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+            pointer-events: none;
+        }
+
+        .carousel-slide.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .carousel-slide iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 15px;
+        }
+
+        .sound-button {
+            position: absolute;
+            bottom: 15px;
+            left: 15px;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 10;
+        }
+
+        .sound-button:hover {
+            background: rgba(255, 27, 141, 0.9);
+            transform: scale(1.1);
+        }
+
+        .sound-button svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+
+        .carousel-numbers {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            padding: 1rem 0 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .carousel-number {
+            min-width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: rgba(0, 217, 255, 0.15);
+            color: var(--accent-cyan);
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid rgba(0, 217, 255, 0.3);
+            padding: 0 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .carousel-number:hover {
+            background: rgba(0, 217, 255, 0.25);
+            border-color: rgba(0, 217, 255, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .carousel-number.active {
+            background: var(--accent-cyan);
+            color: white;
+            border-color: var(--accent-cyan);
+            transform: scale(1.1);
+        }
+
+        .whatsapp-btn {
+            position: fixed;
+            bottom: 2rem;
+            left: 2rem;
+            width: 60px;
+            height: 60px;
+            background: #25D366;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(37, 211, 102, 0.4);
+            z-index: 1000;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+        .whatsapp-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 30px rgba(37, 211, 102, 0.6);
+        }
+
+        .whatsapp-btn svg {
+            width: 32px;
+            height: 32px;
+            fill: white;
+        }
+
+        .whatsapp-tooltip {
+            position: absolute;
+            bottom: 70px;
+            left: 50%;
+            transform: translateX(-50%) scale(0);
+            background: #1f1f1f;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            white-space: nowrap;
+            opacity: 0;
+            transition: all 0.3s;
+            pointer-events: none;
+        }
+
+        .whatsapp-btn:hover .whatsapp-tooltip {
+            transform: translateX(-50%) scale(1);
+            opacity: 1;
+        }
+
+        @media (max-width: 1400px) {
+            .package-row {
+                grid-template-columns: 1fr;
+                gap: 3rem;
+            }
+
+            .character-container {
+                order: -1;
+                height: 450px;
+            }
+
+            .hero-title {
+                font-size: 3.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="grid-bg"></div>
+
+    <div class="loading" id="loading">
+        <div class="loading-text">טוען...</div>
+        <div class="loading-spinner"></div>
+    </div>
+
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-logo">SAP DIGITAL</div>
+            <h1 class="hero-title">סרטוני בינה מלאכותית</h1>
+            <p class="hero-subtitle">תוכן וידאו מקצועי ומותאם אישית</p>
+            <p class="hero-process">לאחר התשלום נבצע שיחה קצרה ונבנה יחד את התסריט המושלם</p>
+            <a href="#packages" class="cta-button">בואו נתחיל ✨</a>
+        </div>
+    </section>
+
+    <section class="packages" id="packages">
+        <h2 class="section-title">בחרו את החבילה שלכם</h2>
+        <p class="section-subtitle">מחיר שקוף | משלוח מהיר | תוצאות מדהימות</p>
+        
+        <!-- Package 1 -->
+        <div class="package-row">
+            <div class="package-card">
+                <div class="package-number">חבילה 01</div>
+                <div class="package-price">₪750</div>
+                <h3 class="package-title">הקלילה</h3>
+                <p class="package-desc">מושלם לתוכן מהיר ברשתות חברתיות</p>
+                <ul class="package-features">
+                    <li>10-12 שניות</li>
+                    <li>שוט יחיד</li>
+                    <li>עריכה</li>
+                </ul>
+                <div class="package-buttons">
+                    <button class="package-btn" onclick="selectPackage(1, 'single')">בחר חבילה</button>
+                    <button class="bundle-btn" onclick="selectPackage(1, 'bundle')">
+                        באנדל משתלם - 3 סרטונים
+                        <div class="bundle-price">
+                            <span class="bundle-original">₪2,250</span>
+                            <span class="bundle-discounted">₪2,000</span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <div class="character-container">
+                <canvas class="character-canvas" id="char1"></canvas>
+            </div>
+
+            <div class="video-carousel">
+                <div class="carousel-container" id="carousel1">
+                    <div class="carousel-slide active">
+                        <iframe src="https://drive.google.com/file/d/14tMwhjjPbNuQukYYLHlLOAYnwT52IMcu/preview?controls=1" allow="autoplay" allowfullscreen></iframe>
+                    </div>
+                    <div class="carousel-slide ">
+                        <iframe src="https://drive.google.com/file/d/1EyQx0N_JSxB1TGckb3KrpePbnT6j6vdY/preview" allow="autoplay" allowfullscreen></iframe>
+                    </div>
+                    <div class="carousel-slide ">
+                        <iframe src="https://drive.google.com/file/d/1dhZB66qpWy_ejxL8QPTwYu2RjNp4m43x/preview" allow="autoplay" allowfullscreen></iframe>
+                    </div>
+                    <div class="carousel-slide ">
+                        <iframe src="https://drive.google.com/file/d/1Mv1a2-DJMy8D0My0pnu1se2lkVX__UXA/preview" allow="autoplay" allowfullscreen></iframe>
+                    </div>
+                    <div class="carousel-slide ">
+                        <iframe src="https://drive.google.com/file/d/1f6AvJnCR-MbzDokLZAwb0VIjG89s9OXV/preview" allow="autoplay" allowfullscreen></iframe>
+                    </div>
+                    <div class="carousel-slide ">
+                        <iframe src="https://drive.google.com/file/d/1kD06SxsIfZqZii-x5QJ6H0rjL_pcyeDF/preview" allow="autoplay" allowfullscreen></iframe>
+                    </div>
+                    <div class="carousel-slide ">
+                        <iframe src="https://drive.google.com/file/d/1Ljmo1sZXZ9rVZ_5UjjFNe1QasXvPORm5/preview" allow="autoplay" allowfullscreen></iframe>
+                    </div>
+                    <div class="carousel-slide ">
+                        <iframe src="https://drive.google.com/file/d/1TblTw2N5Yno79x0oc2oT5YKGoRGZ_ZwE/preview" allow="autoplay" allowfullscreen></iframe>
+                    </div>
+                    <button class="sound-button" onclick="toggleSound(0)" title="הפעל סאונד">
+                        <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+                    </button>
+                </div>
+                <div class="carousel-numbers">
+                    <button class="carousel-number active" onclick="changeSlide(0, 0)">1</button>
+                    <button class="carousel-number " onclick="changeSlide(0, 1)">2</button>
+                    <button class="carousel-number " onclick="changeSlide(0, 2)">3</button>
+                    <button class="carousel-number " onclick="changeSlide(0, 3)">4</button>
+                    <button class="carousel-number " onclick="changeSlide(0, 4)">5</button>
+                    <button class="carousel-number " onclick="changeSlide(0, 5)">6</button>
+                    <button class="carousel-number " onclick="changeSlide(0, 6)">7</button>
+                    <button class="carousel-number " onclick="changeSlide(0, 7)">8</button>
+                    
+                </div>
+            </div>
+        </div>
+
+        <!-- Package 2 -->
+        <div class="package-row">
+            <div class="package-card">
+                <div class="package-number">חבילה 02</div>
+                <div class="package-price">₪1,200</div>
+                <h3 class="package-title">פורצת גבולות הדמיון</h3>
+                <p class="package-desc">אידיאלי לקמפיינים שיווקיים</p>
+                <ul class="package-features">
+                    <li>10-20 שניות</li>
+                    <li>2-3 שוטים</li>
+                    <li>עריכה</li>
+                </ul>
+                <div class="package-buttons">
+                    <button class="package-btn" onclick="selectPackage(2, 'single')">בחר חבילה</button>
+                    <button class="bundle-btn" onclick="selectPackage(2, 'bundle')">
+                        באנדל משתלם - 3 סרטונים
+                        <div class="bundle-price">
+                            <span class="bundle-original">₪3,600</span>
+                            <span class="bundle-discounted">₪3,000</span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <div class="character-container">
+                <canvas class="character-canvas" id="char2"></canvas>
+            </div>
+
+            <div class="video-carousel">
+                <div class="carousel-container" id="carousel2">
+                    <div class="carousel-slide active">
+                        <iframe src="https://drive.google.com/file/d/1QEyjWc1tryjVJFlvS0XGQygChbt39zhY/preview" allow="autoplay" allowfullscreen></iframe>
+                    </div>
+                    <div class="carousel-slide ">
+                        <iframe src="https://drive.google.com/file/d/1GIWxMRYxH6R18nv9qVXfS-w1hreDBOu_/preview" allow="autoplay" allowfullscreen></iframe>
+                    </div>
+                    <div class="carousel-slide ">
+                        <iframe src="https://drive.google.com/file/d/1H9RXUfv1NUA-TwEHMakXuNMBlVNLFfGT/preview" allow="autoplay" allowfullscreen></iframe>
+                    </div>
+                    <div class="carousel-slide ">
+                        <iframe src="https://drive.google.com/file/d/1J4anBHYeqg6Wj8JKpKa4fLi7pSUZ8Oga/preview" allow="autoplay" allowfullscreen></iframe>
+                    </div>
+                    <div class="carousel-slide ">
+                        <iframe src="https://drive.google.com/file/d/1lVQfsFBqrUODwlDDiJY40g_ZYgufVk6Q/preview" allow="autoplay" allowfullscreen></iframe>
+                    </div>
+                    <button class="sound-button" onclick="toggleSound(1)" title="הפעל סאונד">
+                        <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+                    </button>
+                </div>
+                <div class="carousel-numbers">
+                    <button class="carousel-number active" onclick="changeSlide(1, 0)">1</button>
+                    <button class="carousel-number " onclick="changeSlide(1, 1)">2</button>
+                    <button class="carousel-number " onclick="changeSlide(1, 2)">3</button>
+                    <button class="carousel-number " onclick="changeSlide(1, 3)">4</button>
+                    <button class="carousel-number " onclick="changeSlide(1, 4)">5</button>
+                    
+                </div>
+            </div>
+        </div>
+
+        <!-- Package 3 -->
+        <div class="package-row">
+            <div class="package-card">
+                <div class="package-number">חבילה 03</div>
+                <div class="package-price">₪1,500</div>
+                <h3 class="package-title">השמים הם הגבול. ואולי לא ;)</h3>
+                <p class="package-desc">רמת פרודקשן מקצועית</p>
+                <ul class="package-features">
+                    <li>20-30 שניות</li>
+                    <li>5-7 שוטים</li>
+                    <li>עריכה</li>
+                </ul>
+                <div class="package-buttons">
+                    <button class="package-btn" onclick="selectPackage(3, 'single')">בחר חבילה</button>
+                    <button class="bundle-btn" onclick="selectPackage(3, 'bundle')">
+                        באנדל משתלם - 3 סרטונים
+                        <div class="bundle-price">
+                            <span class="bundle-original">₪4,500</span>
+                            <span class="bundle-discounted">₪4,000</span>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <div class="character-container">
+                <canvas class="character-canvas" id="char3"></canvas>
+            </div>
+
+            <div class="video-carousel">
+                <div class="carousel-container" id="carousel3">
+                    <div class="carousel-slide active">
+                        <iframe src="https://drive.google.com/file/d/1rgVDvOugUHL5b8abZdxHtMzKfJSWnga9/preview" allow="autoplay" allowfullscreen></iframe>
+                    </div>
+                    <div class="carousel-slide ">
+                        <iframe src="https://drive.google.com/file/d/1YYMfhXKazhD48GOPkuEPo2lsZp5ejCnq/preview" allow="autoplay" allowfullscreen></iframe>
+                    </div>
+                    <button class="sound-button" onclick="toggleSound(2)" title="הפעל סאונד">
+                        <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>
+                    </button>
+                </div>
+                <div class="carousel-numbers">
+                    <button class="carousel-number active" onclick="changeSlide(2, 0)">1</button>
+                    <button class="carousel-number " onclick="changeSlide(2, 1)">2</button>
+                    
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <a href="https://wa.me/972586224154" target="_blank" class="whatsapp-btn">
+        <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16 0C7.163 0 0 7.163 0 16c0 2.825.739 5.478 2.033 7.776L0.699 30.24l6.687-1.754A15.938 15.938 0 0016 32c8.837 0 16-7.163 16-16S24.837 0 16 0zm9.361 22.561c-.407 1.15-2.021 2.107-3.313 2.384-.888.186-2.045.333-5.942-1.276-4.973-2.053-8.166-7.054-8.416-7.378-.241-.324-2.003-2.669-2.003-5.089 0-2.42 1.269-3.611 1.72-4.103.45-.492 1.003-.615 1.34-.615.324 0 .648.009.933.017.298.009.698-.113 1.092.833.407 1.012 1.393 3.4 1.514 3.65.121.25.202.542.04.866-.162.333-.243.542-.486.833-.243.291-.51.65-.729.872-.243.242-.495.505-.213.99.282.486 1.256 2.073 2.697 3.357 1.854 1.653 3.416 2.168 3.903 2.416.486.25.77.202 1.053-.121.282-.324 1.217-1.42 1.542-1.906.324-.486.648-.405 1.092-.243.45.162 2.853 1.346 3.342 1.592.486.243.81.364.931.567.121.203.121 1.171-.286 2.322z"/>
+        </svg>
+        <div class="whatsapp-tooltip">צרו קשר בוואטסאפ</div>
+    </a>
+
+    <script>
+        const carouselStates = [{muted: true}, {muted: true}, {muted: true}];
+
+        function toggleSound(carouselIndex) {
+            const carousel = document.getElementById('carousel' + (carouselIndex + 1));
+            const activeSlide = carousel.querySelector('.carousel-slide.active');
+            const iframe = activeSlide.querySelector('iframe');
+            const button = carousel.querySelector('.sound-button');
+            
+            carouselStates[carouselIndex].muted = !carouselStates[carouselIndex].muted;
+            
+            const currentSrc = iframe.src.split('?')[0];
+            iframe.src = currentSrc + (carouselStates[carouselIndex].muted ? '' : '?autoplay=1');
+            
+            if (carouselStates[carouselIndex].muted) {
+                button.innerHTML = '<svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/></svg>';
+                button.title = 'הפעל סאונד';
+            } else {
+                button.innerHTML = '<svg viewBox="0 0 24 24"><path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/></svg>';
+                button.title = 'כבה סאונד';
+            }
+        }
+
+        function changeSlide(carouselIndex, slideIndex) {
+            const carouselId = 'carousel' + (carouselIndex + 1);
+            const carousel = document.getElementById(carouselId);
+            const slides = carousel.querySelectorAll('.carousel-slide');
+            const numbers = carousel.parentElement.querySelectorAll('.carousel-number');
+            
+            slides.forEach((slide, i) => {
+                slide.classList.toggle('active', i === slideIndex);
+            });
+            
+            numbers.forEach((num, i) => {
+                num.classList.toggle('active', i === slideIndex);
+            });
+        }
+
+        window.selectPackage = (packageNum, type) => {
+            const wixProductUrls = {
+                1: { 
+                    single: 'https://www.sapdigital.co/product-page/%D7%97%D7%91%D7%99%D7%9C%D7%94-1-%D7%A1%D7%A8%D7%98%D7%95%D7%9F-%D7%91%D7%95%D7%93%D7%93',
+                    bundle: 'https://www.sapdigital.co/product-page/%D7%97%D7%91%D7%99%D7%9C%D7%94-1-%D7%91%D7%90%D7%A0%D7%93%D7%9C-3-%D7%A1%D7%A8%D7%98%D7%95%D7%A0%D7%99%D7%9D'
+                },
+                2: { 
+                    single: 'https://www.sapdigital.co/product-page/%D7%97%D7%91%D7%99%D7%9C%D7%94-2-%D7%A1%D7%A8%D7%98%D7%95%D7%9F-%D7%91%D7%95%D7%93%D7%93',
+                    bundle: 'https://www.sapdigital.co/product-page/%D7%97%D7%91%D7%99%D7%9C%D7%94-2-%D7%91%D7%90%D7%A0%D7%93%D7%9C-3-%D7%A1%D7%A8%D7%98%D7%95%D7%A0%D7%99%D7%9D'
+                },
+                3: { 
+                    single: 'https://www.sapdigital.co/product-page/%D7%97%D7%91%D7%99%D7%9C%D7%94-3-%D7%A1%D7%A8%D7%98%D7%95%D7%9F-%D7%91%D7%95%D7%93%D7%93',
+                    bundle: 'https://www.sapdigital.co/product-page/%D7%97%D7%91%D7%99%D7%9C%D7%94-3-%D7%91%D7%90%D7%A0%D7%93%D7%9C-3-%D7%A1%D7%A8%D7%98%D7%95%D7%A0%D7%99%D7%9D'
+                }
+            };
+            
+            const productUrl = wixProductUrls[packageNum][type];
+            window.open(productUrl, '_blank');
+        };
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+        const char1Data = "character1_optimized.glb";
+        const char2Data = "character2_optimized.glb";
+        const char3Data = "character3_optimized.glb";
+
+        let globalMouseX = 0, globalMouseY = 0;
+        document.addEventListener('mousemove', (e) => {
+            globalMouseX = e.clientX;
+            globalMouseY = e.clientY;
+        });
+
+
+
+        const scenes = [];
+        let loaded = 0;
+        const totalToLoad = 3;
+
+        function checkLoaded() {
+            loaded++;
+            if (loaded >= totalToLoad) {
+                setTimeout(() => {
+                    document.getElementById('loading').classList.add('hidden');
+                }, 500);
+            }
+        }
+
+        function createCharacterScene(canvasId, index, glbData) {
+            const canvas = document.getElementById(canvasId);
+            const container = canvas.parentElement;
+            const width = container.offsetWidth;
+            const height = container.offsetHeight;
+
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+            camera.position.set(0, 1.2, 4.5);
+
+            const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
+            renderer.setSize(width, height);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.outputEncoding = THREE.sRGBEncoding;
+
+            const ambient = new THREE.AmbientLight(0xffffff, 1);
+            scene.add(ambient);
+
+            const colors = [0xFF1B8D, 0xB968C7, 0x00D9FF];
+            const light1 = new THREE.PointLight(colors[index % 3], 2, 100);
+            light1.position.set(3, 5, 3);
+            scene.add(light1);
+
+            const light2 = new THREE.DirectionalLight(0xffffff, 1.5);
+            light2.position.set(-5, 5, -5);
+            scene.add(light2);
+
+            const loader = new GLTFLoader();
+            const url = glbData;
+
+            let model, mixer;
+            let targetRotationX = 0, targetRotationY = 0;
+            let currentRotationX = 0, currentRotationY = 0;
+
+            loader.load(url, (gltf) => {
+                model = gltf.scene;
+                
+                const box = new THREE.Box3().setFromObject(model);
+                const center = box.getCenter(new THREE.Vector3());
+                const size = box.getSize(new THREE.Vector3());
+                const maxDim = Math.max(size.x, size.y, size.z);
+                const scale = 3 / maxDim;
+                
+                model.scale.setScalar(scale);
+                model.position.sub(center.multiplyScalar(scale));
+                model.position.y = -0.6;
+                
+                scene.add(model);
+
+                if (gltf.animations?.length) {
+                    mixer = new THREE.AnimationMixer(model);
+                    gltf.animations.forEach(clip => mixer.clipAction(clip).play());
+                }
+
+                URL.revokeObjectURL(url);
+                checkLoaded();
+            });
+
+            scenes.push({ scene, camera, renderer, model: () => model, mixer: () => mixer });
+
+            function animate() {
+                requestAnimationFrame(animate);
+                
+                if (mixer) mixer.update(0.016);
+                
+                if (model) {
+                    const rect = canvas.getBoundingClientRect();
+                    const centerX = rect.left + rect.width / 2;
+                    const centerY = rect.top + rect.height / 2;
+                    
+                    const deltaX = globalMouseX - centerX;
+                    const deltaY = globalMouseY - centerY;
+                    
+                    const normalizedX = (deltaX / (rect.width / 2));
+                    const normalizedY = -(deltaY / (rect.height / 2));
+                    
+                    const distanceFromCenter = Math.sqrt(normalizedX * normalizedX + normalizedY * normalizedY);
+                    
+                    if (distanceFromCenter < 0.5) {
+                        targetRotationY = normalizedX * 0.3;
+                        targetRotationX = normalizedY * 0.2;
+                    } else {
+                        targetRotationY = normalizedX * 0.6;
+                        targetRotationX = normalizedY * 0.4;
+                    }
+                    
+                    currentRotationY += (targetRotationY - currentRotationY) * 0.06;
+                    currentRotationX += (targetRotationX - currentRotationX) * 0.06;
+                    
+                    model.rotation.y = currentRotationY;
+                    model.rotation.x = currentRotationX;
+                }
+                
+                renderer.render(scene, camera);
+            }
+            animate();
+        }
+
+        window.addEventListener('load', () => {
+            // Force hide loading after 3 seconds
+            setTimeout(() => {
+                const el = document.getElementById('loading');
+                if (el) el.classList.add('hidden');
+            }, 3000);
+            
+            createCharacterScene('char1', 0, char1Data);
+            createCharacterScene('char2', 1, char2Data);
+            createCharacterScene('char3', 2, char3Data);
+        });
+    </script>
+</body>
+</html>
